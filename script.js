@@ -54,7 +54,7 @@ if (contactForm) {
         try {
             // Here you would normally send data to your backend
             // For now, we'll simulate a successful submission
-            console.log('Form data:', data);
+            // Note: In production, send data to backend API, don't log sensitive info
             
             // Simulate API call
             await new Promise(resolve => setTimeout(resolve, 1000));

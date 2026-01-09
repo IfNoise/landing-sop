@@ -47,9 +47,33 @@ This landing page targets farm owners and managers who want to improve their ope
 
 ## Setup
 
+### Local Development
+
 1. Open `index.html` in a browser
 2. No build process required
 3. All assets are self-contained
+
+### GitHub Pages Deployment
+
+This project is configured for automatic deployment to GitHub Pages:
+
+1. **Enable GitHub Pages:**
+   - Go to repository Settings → Pages
+   - Source: "GitHub Actions"
+   
+2. **Automatic Deployment:**
+   - Every push to `main` branch triggers automatic deployment
+   - GitHub Actions workflow: `.github/workflows/deploy.yml`
+
+3. **Manual Deployment:**
+   - Go to Actions tab
+   - Run "Deploy to GitHub Pages" workflow manually
+
+4. **Access your site:**
+   - URL: `https://ifnoise.github.io/landing-sop/`
+   - Custom domain: Add `CNAME` file with your domain
+
+**Note:** `.nojekyll` file disables Jekyll processing for faster deployments.
 
 ## Customization
 

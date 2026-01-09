@@ -1,5 +1,22 @@
+# Editor
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
 
+# OS
+.DS_Store
+Thumbs.db
 
-#Ignore vscode AI rules
+# Temporary files
+*.tmp
+*.log
+
+# GitHub specific
 .github/instructions/codacy.instructions.md
 PROMPT.md
+.codacy/
+# Backup files
+*_old.*
+*_backup.*
