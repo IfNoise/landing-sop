@@ -39,6 +39,9 @@ const contactForm = document.getElementById('contactForm');
 const formSuccess = document.getElementById('formSuccess');
 const formError = document.getElementById('formError');
 
+// ВАЖНО: Замените на ваш реальный URL от Google Apps Script
+const GOOGLE_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbwmvd_uhbHVjcrm2vQmNdQIyEr3ng2MRL_R2aCsplC72Fseteim714jxTZuTJbniZJX/exec';
+
 if (contactForm) {
     contactForm.addEventListener('submit', async (e) => {
         e.preventDefault();
@@ -47,17 +50,35 @@ if (contactForm) {
         const formData = new FormData(contactForm);
         const data = Object.fromEntries(formData);
         
+        // Add timestamp
+        data.timestamp = new Date().toISOString();
+        
+        // Convert checkbox to string
+        data.newsletter = data.newsletter ? 'Да' : 'Нет';
+        
         // Hide any previous messages
         if (formSuccess) formSuccess.style.display = 'none';
         if (formError) formError.style.display = 'none';
         
+        // Disable submit button
+        const submitBtn = contactForm.querySelector('button[type="submit"]');
+        const originalBtnText = submitBtn.textContent;
+        submitBtn.disabled = true;
+        submitBtn.textContent = 'Отправка...';
+        
         try {
-            // Here you would normally send data to your backend
-            // For now, we'll simulate a successful submission
-            // Note: In production, send data to backend API, don't log sensitive info
+            // Send data to Google Apps Script
+            const response = await fetch(GOOGLE_SCRIPT_URL, {
+                method: 'POST',
+                mode: 'no-cors', // Important for Google Apps Script
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify(data)
+            });
             
-            // Simulate API call
-            await new Promise(resolve => setTimeout(resolve, 1000));
+            // Note: with 'no-cors' mode, we can't read the response
+            // but if no error is thrown, we assume success
             
             // Show success message
             if (formSuccess) {
@@ -71,9 +92,14 @@ if (contactForm) {
         } catch (error) {
             console.error('Form submission error:', error);
             if (formError) {
+                formError.textContent = 'Произошла ошибка при отправке формы. Пожалуйста, попробуйте позже или свяжитесь с нами напрямую.';
                 formError.style.display = 'block';
                 formError.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
             }
+        } finally {
+            // Re-enable submit button
+            submitBtn.disabled = false;
+            submitBtn.textContent = originalBtnText;
         }
     });
 }
