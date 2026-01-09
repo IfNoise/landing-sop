@@ -662,6 +662,7 @@ body {
 
 #google_translate_element {
     font-size: 0;
+    display: inline-block;
 }
 
 #google_translate_element select {
@@ -671,4 +672,29 @@ body {
     font-size: 0.875rem;
     background: white;
     cursor: pointer;
+    min-width: 150px;
+}
+
+.goog-te-gadget {
+    font-size: 0 !important;
+    line-height: 1;
+}
+
+.goog-te-gadget .goog-te-combo {
+    padding: 0.5rem !important;
+    border: 2px solid var(--border-color) !important;
+    border-radius: 6px !important;
+    font-size: 0.875rem !important;
+    background: white !important;
+    cursor: pointer !important;
+    min-width: 150px !important;
+}
+
+/* Скрыть текст "Powered by" */
+.goog-logo-link {
+    display: none !important;
+}
+
+.goog-te-gadget .goog-te-combo option {
+    padding: 0.25rem;
 }
