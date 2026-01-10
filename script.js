@@ -76,6 +76,16 @@ if (contactForm) {
         submitBtn.textContent = 'Отправка...';
         
         try {
+            // ВАЖНО: Показываем данные перед отправкой для отладки
+            alert('Проверка данных перед отправкой:\n\n' + 
+                  'Имя: ' + data.name + '\n' +
+                  'Ферма: ' + data.farm + '\n' +
+                  'Email: ' + data.email + '\n' +
+                  'Телефон: ' + data.phone + '\n' +
+                  'Тип: ' + data['farm-type'] + '\n' +
+                  'Размер: ' + data['farm-size'] + '\n' +
+                  'Сообщение: ' + data.message);
+            
             // Send data to Google Apps Script
             const response = await fetch(GOOGLE_SCRIPT_URL, {
                 method: 'POST',
