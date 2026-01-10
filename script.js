@@ -40,7 +40,7 @@ const formSuccess = document.getElementById('formSuccess');
 const formError = document.getElementById('formError');
 
 // ВАЖНО: Замените на ваш реальный URL от Google Apps Script
-const GOOGLE_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbwmvd_uhbHVjcrm2vQmNdQIyEr3ng2MRL_R2aCsplC72Fseteim714jxTZuTJbniZJX/exec';
+const GOOGLE_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbxF0HkCgAF6cwHXg-Vn6CCZo2OPqPKJv0PBKSBwpRNSlHOqd28dSOnjSGWjmAIPDO9o/exec';
 
 if (contactForm) {
     contactForm.addEventListener('submit', async (e) => {
