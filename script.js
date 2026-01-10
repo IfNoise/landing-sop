@@ -48,13 +48,22 @@ if (contactForm) {
         
         // Get form data
         const formData = new FormData(contactForm);
-        const data = Object.fromEntries(formData);
         
-        // Add timestamp
-        data.timestamp = new Date().toISOString();
+        // Собираем данные явно, чтобы гарантировать все поля
+        const data = {
+            timestamp: new Date().toISOString(),
+            name: formData.get('name') || '',
+            farm: formData.get('farm') || '',
+            email: formData.get('email') || '',
+            phone: formData.get('phone') || '',
+            'farm-type': formData.get('farm-type') || '',
+            'farm-size': formData.get('farm-size') || '',
+            message: formData.get('message') || '',
+            website: formData.get('website') || '' // Honeypot field
+        };
         
-        // Convert checkbox to string
-        data.newsletter = data.newsletter ? 'Да' : 'Нет';
+        // Логирование для отладки (удалите после тестирования)
+        console.log('Отправляемые данные:', data);
         
         // Hide any previous messages
         if (formSuccess) formSuccess.style.display = 'none';
