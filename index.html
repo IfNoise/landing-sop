@@ -388,6 +388,12 @@
                 
                 <div class="contact-form-container">
                     <form id="contactForm" class="contact-form">
+                        <!-- Honeypot field для защиты от ботов (скрыто от людей) -->
+                        <div style="position: absolute; left: -9999px; opacity: 0; pointer-events: none;" aria-hidden="true">
+                            <label for="website">Website</label>
+                            <input type="text" name="website" id="website" tabindex="-1" autocomplete="off">
+                        </div>
+                        
                         <div class="form-group">
                             <label for="name">Your Name *</label>
                             <input type="text" id="name" name="name" required placeholder="John Doe">

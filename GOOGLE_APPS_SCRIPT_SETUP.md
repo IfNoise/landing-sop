@@ -1,19 +1,113 @@
 # Настройка Google Apps Script для формы
 
-## Шаг 1: Создание Google Таблицы
+## Шаг 1: Создание и настройка Google Таблицы
+
+### Вариант А: Автоматическая настройка (рекомендуется)
 
 1. Откройте [Google Sheets](https://sheets.google.com)
 2. Создайте новую таблицу "Landing SOP - Заявки"
-3. В первой строке создайте заголовки:
-   - A1: Дата и время
-   - B1: Имя
-   - C1: Компания
-   - D1: Email
-   - E1: Телефон
-   - F1: Интерес
-   - G1: Размер фермы
-   - H1: Сообщение
-   - I1: Подписка на новости
+3. В Google Таблице: **Расширения** → **Apps Script**
+4. Вставьте следующий код для настройки:
+
+```javascript
+function setupSheet() {
+  const ss = SpreadsheetApp.getActiveSpreadsheet();
+  let sheet = ss.getActiveSheet();
+  
+  // Переименовываем первый лист
+  sheet.setName('Заявки');
+  
+  // Очищаем лист
+  sheet.clear();
+  
+  // Устанавливаем заголовки
+  const headers = [
+    'Дата и время',
+    'Имя',
+    'Название фермы',
+    'Email',
+    'Телефон',
+    'Тип фермы',
+    'Размер фермы',
+    'Сообщение'
+  ];
+  
+  sheet.getRange(1, 1, 1, headers.length).setValues([headers]);
+  
+  // Форматирование заголовков
+  const headerRange = sheet.getRange(1, 1, 1, headers.length);
+  headerRange.setBackground('#2d5016')
+             .setFontColor('#ffffff')
+             .setFontWeight('bold')
+             .setHorizontalAlignment('center');
+  
+  // Устанавливаем ширину столбцов
+  sheet.setColumnWidth(1, 150); // Дата и время
+  sheet.setColumnWidth(2, 150); // Имя
+  sheet.setColumnWidth(3, 150); // Название фермы
+  sheet.setColumnWidth(4, 200); // Email
+  sheet.setColumnWidth(5, 130); // Телефон
+  sheet.setColumnWidth(6, 150); // Тип фермы
+  sheet.setColumnWidth(7, 150); // Размер фермы
+  sheet.setColumnWidth(8, 300); // Сообщение
+  
+  // Замораживаем первую строку
+  sheet.setFrozenRows(1);
+  
+  // Создаем лист для подозрительной активности
+  let logSheet = ss.getSheetByName('Подозрительная активность');
+  if (!logSheet) {
+    logSheet = ss.insertSheet('Подозрительная активность');
+    const logHeaders = ['Дата и время', 'Причина', 'Данные', 'Ключ пользователя'];
+    logSheet.getRange(1, 1, 1, logHeaders.length).setValues([logHeaders]);
+    logSheet.getRange(1, 1, 1, logHeaders.length)
+            .setBackground('#8B0000')
+            .setFontColor('#ffffff')
+            .setFontWeight('bold');
+    logSheet.setColumnWidth(1, 150);
+    logSheet.setColumnWidth(2, 200);
+    logSheet.setColumnWidth(3, 300);
+    logSheet.setColumnWidth(4, 150);
+    logSheet.setFrozenRows(1);
+  }
+  
+  // Вместо alert используем Logger для совместимости
+  Logger.log('✅ Таблица успешно настроена!');
+  Logger.log('Теперь скопируйте ID этой таблицы из URL и используйте в коде Apps Script.');
+  
+  return 'Таблица успешно настроена! Заголовки созданы, форматирование применено.';
+}
+
+// Добавляем пункт меню для удобства (работает только при открытии таблицы)
+function onOpen() {
+  try {
+    const ui = SpreadsheetApp.getUi();
+    ui.createMenu('🌾 Landing SOP')
+      .addItem('Настроить таблицу', 'setupSheet')
+      .addToUi();
+  } catch (error) {
+    // Игнорируем ошибку если запущено не в контексте UI
+    Logger.log('onOpen не может быть вызван в этом контексте');
+  }
+}
+```
+
+5. Нажмите **Сохранить** (иконка дискеты)
+6. Запустите функцию `setupSheet`: выберите `setupSheet` в выпадающем списке и нажмите **Запустить**
+7. **Разрешите доступ** при первом запуске
+8. Таблица автоматически настроится с правильными заголовками и форматированием
+
+### Вариант Б: Ручная настройка
+
+Если предпочитаете ручную настройку, создайте заголовки в первой строке:
+- A1: Дата и время
+- B1: Имя
+- C1: Название фермы
+- D1: Email
+- E1: Телефон
+- F1: Тип фермы
+- G1: Размер фермы
+- H1: Сообщение
 
 ## Шаг 2: Получение ID таблицы
 
@@ -23,56 +117,261 @@
    ```
 2. Сохраните этот ID - он понадобится в коде
 
-## Шаг 3: Создание Apps Script
+## Шаг 3: Создание Apps Script для обработки формы
 
 1. В Google Таблице: **Расширения** → **Apps Script**
-2. Удалите весь существующий код
-3. Вставьте следующий код:
+2. Если вы использовали автоматическую настройку из Шага 1, код уже есть - добавьте к нему
+3. Если нет, удалите весь существующий код и вставьте следующий:
 
 ```javascript
 function doPost(e) {
   try {
-    // Замените на ID вашей таблицы из шага 2
-    const SPREADSHEET_ID = 'YOUR_SPREADSHEET_ID_HERE';
-    const sheet = SpreadsheetApp.openById(SPREADSHEET_ID).getActiveSheet();
+    const SPREADSHEET_ID = 'YOUR_SPREADSHEET_ID_HERE'; // Замените на ID вашей таблицы
+    const MAX_LENGTH = 1000;
+    
+    // 1. Проверка Content-Type
+    if (!e.postData || e.postData.type !== 'application/json') {
+      return createErrorResponse('Invalid content type');
+    }
     
     const data = JSON.parse(e.postData.contents);
     
+    // 2. Валидация обязательных полей
+    if (!data.name || !data.email || !data.message) {
+      return createErrorResponse('Отсутствуют обязательные поля');
+    }
+    
+    // 3. Валидация email
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(data.email)) {
+      return createErrorResponse('Неверный формат email');
+    }
+    
+    // 4. Проверка длины полей
+    if (data.message && data.message.length > MAX_LENGTH) {
+      return createErrorResponse('Сообщение слишком длинное');
+    }
+    
+    // 5. Honeypot проверка (защита от ботов)
+    if (data.website) {
+      logSuspiciousActivity('Honeypot triggered', data, SPREADSHEET_ID);
+      return createErrorResponse('Bot detected');
+    }
+    
+    // 6. Санитизация данных
+    const sanitize = (str) => str ? str.toString().substring(0, MAX_LENGTH).trim() : '';
+    
+    const sheet = SpreadsheetApp.openById(SPREADSHEET_ID).getSheetByName('Заявки');
+    
+    // 7. Сохранение данных в таблицу
     sheet.appendRow([
       new Date(data.timestamp),
-      data.name || '',
-      data.company || '',
-      data.email || '',
-      data.phone || '',
-      data.interest || '',
-      data.facilitySize || '',
-      data.message || '',
-      data.newsletter || 'Нет'
+      sanitize(data.name),
+      sanitize(data.farm),
+      sanitize(data.email),
+      sanitize(data.phone),
+      sanitize(data['farm-type']),
+      sanitize(data['farm-size']),
+      sanitize(data.message)
     ]);
     
-    return ContentService
-      .createTextOutput(JSON.stringify({ success: true }))
-      .setMimeType(ContentService.MimeType.JSON);
+    // 8. Отправка email уведомления
+    sendEmailNotification(data);
+    
+    return createSuccessResponse();
       
   } catch (error) {
-    return ContentService
-      .createTextOutput(JSON.stringify({ 
-        success: false, 
-        error: error.toString(),
-        stack: error.stack
-      }))
-      .setMimeType(ContentService.MimeType.JSON);
+    Logger.log('Error: ' + error.toString());
+    return createErrorResponse('Ошибка сервера: ' + error.toString());
   }
 }
 
 function doGet(e) {
   return ContentService
-    .createTextOutput(JSON.stringify({ status: "working" }))
+    .createTextOutput(JSON.stringify({ status: "working", timestamp: new Date() }))
     .setMimeType(ContentService.MimeType.JSON);
+}
+
+function createSuccessResponse() {
+  return ContentService
+    .createTextOutput(JSON.stringify({ success: true }))
+    .setMimeType(ContentService.MimeType.JSON);
+}
+
+function createErrorResponse(message) {
+  return ContentService
+    .createTextOutput(JSON.stringify({ success: false, error: message }))
+    .setMimeType(ContentService.MimeType.JSON);
+}
+
+function sendEmailNotification(data) {
+  try {
+    const myEmail = Session.getActiveUser().getEmail();
+    
+    // Ограничение: не более 1 письма в 5 минут
+    const cache = CacheService.getScriptCache();
+    const lastEmailTime = cache.get('last_email_time');
+    const now = Date.now();
+    
+    if (!lastEmailTime || (now - parseInt(lastEmailTime)) > 300000) {
+      MailApp.sendEmail({
+        to: myEmail,
+        subject: '🌾 Новая заявка с Landing SOP',
+        htmlBody: `
+          <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
+            <h2 style="color: #2d5016;">Новая заявка с сайта</h2>
+            <p><strong>Дата:</strong> ${new Date(data.timestamp).toLocaleString('ru-RU')}</p>
+            <hr style="border: 1px solid #e0e0e0;">
+            
+            <table style="width: 100%; border-collapse: collapse;">
+              <tr>
+                <td style="padding: 8px; background: #f5f5f5;"><strong>Имя:</strong></td>
+                <td style="padding: 8px;">${escapeHtml(data.name)}</td>
+              </tr>
+              <tr>
+                <td style="padding: 8px; background: #f5f5f5;"><strong>Ферма:</strong></td>
+                <td style="padding: 8px;">${escapeHtml(data.farm) || '-'}</td>
+              </tr>
+              <tr>
+                <td style="padding: 8px; background: #f5f5f5;"><strong>Email:</strong></td>
+                <td style="padding: 8px;"><a href="mailto:${escapeHtml(data.email)}">${escapeHtml(data.email)}</a></td>
+              </tr>
+              <tr>
+                <td style="padding: 8px; background: #f5f5f5;"><strong>Телефон:</strong></td>
+                <td style="padding: 8px;">${escapeHtml(data.phone) || '-'}</td>
+              </tr>
+              <tr>
+                <td style="padding: 8px; background: #f5f5f5;"><strong>Тип фермы:</strong></td>
+                <td style="padding: 8px;">${escapeHtml(data['farm-type']) || '-'}</td>
+              </tr>
+              <tr>
+                <td style="padding: 8px; background: #f5f5f5;"><strong>Размер:</strong></td>
+                <td style="padding: 8px;">${escapeHtml(data['farm-size']) || '-'}</td>
+              </tr>
+            </table>
+            
+            <div style="margin-top: 20px; padding: 15px; background: #f9f9f9; border-left: 4px solid #2d5016;">
+              <strong>Сообщение:</strong><br>
+              ${escapeHtml(data.message).replace(/\n/g, '<br>')}
+            </div>
+            
+            <hr style="border: 1px solid #e0e0e0; margin-top: 20px;">
+            <p style="color: #666; font-size: 12px;">
+              Это автоматическое уведомление с формы обратной связи<br>
+              <a href="https://ifnoise.github.io/landing-sop/">Landing SOP</a>
+            </p>
+          </div>
+        `
+      });
+      
+      cache.put('last_email_time', now.toString(), 600);
+      Logger.log('Email notification sent to ' + myEmail);
+    } else {
+      Logger.log('Email notification skipped (rate limited)');
+    }
+  } catch (error) {
+    Logger.log('Email error: ' + error.toString());
+  }
+}
+
+function escapeHtml(unsafe) {
+  if (!unsafe) return '';
+  return unsafe
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;")
+    .replace(/'/g, "&#039;");
+}
+
+function logSuspiciousActivity(reason, data, spreadsheetId) {
+  try {
+    const logSheet = SpreadsheetApp.openById(spreadsheetId).getSheetByName('Подозрительная активность');
+    
+    if (logSheet) {
+      logSheet.appendRow([
+        new Date(),
+        reason,
+        JSON.stringify(data),
+        Session.getTemporaryActiveUserKey()
+      ]);
+    }
+  } catch (error) {
+    Logger.log('Log error: ' + error.toString());
+  }
+}
+
+// Функция для настройки таблицы (из Шага 1)
+function setupSheet() {
+  const ss = SpreadsheetApp.getActiveSpreadsheet();
+  let sheet = ss.getActiveSheet();
+  
+  sheet.setName('Заявки');
+  sheet.clear();
+  
+  const headers = [
+    'Дата и время',
+    'Имя',
+    'Название фермы',
+    'Email',
+    'Телефон',
+    'Тип фермы',
+    'Размер фермы',
+    'Сообщение'
+  ];
+  
+  sheet.getRange(1, 1, 1, headers.length).setValues([headers]);
+  
+  const headerRange = sheet.getRange(1, 1, 1, headers.length);
+  headerRange.setBackground('#2d5016')
+             .setFontColor('#ffffff')
+             .setFontWeight('bold')
+             .setHorizontalAlignment('center');
+  
+  sheet.setColumnWidth(1, 150);
+  sheet.setColumnWidth(2, 150);
+  sheet.setColumnWidth(3, 150);
+  sheet.setColumnWidth(4, 200);
+  sheet.setColumnWidth(5, 130);
+  sheet.setColumnWidth(6, 150);
+  sheet.setColumnWidth(7, 150);
+  sheet.setColumnWidth(8, 300);
+  
+  sheet.setFrozenRows(1);
+  
+  let logSheet = ss.getSheetByName('Подозрительная активность');
+  if (!logSheet) {
+    logSheet = ss.insertSheet('Подозрительная активность');
+    const logHeaders = ['Дата и время', 'Причина', 'Данные', 'Ключ пользователя'];
+    logSheet.getRange(1, 1, 1, logHeaders.length).setValues([logHeaders]);
+    logSheet.getRange(1, 1, 1, logHeaders.length)
+            .setBackground('#8B0000')
+            .setFontColor('#ffffff')
+            .setFontWeight('bold');
+    logSheet.setColumnWidth(1, 150);
+    logSheet.setColumnWidth(2, 200);
+    logSheet.setColumnWidth(3, 300);
+    logSheet.setColumnWidth(4, 150);
+    logSheet.setFrozenRows(1);
+  }
+  
+  Logger.log('✅ Таблица успешно настроена!');
+  return 'Таблица успешно настроена!';
+}
+
+function onOpen() {
+  try {
+    const ui = SpreadsheetApp.getUi();
+    ui.createMenu('🌾 Landing SOP')
+      .addItem('Настроить таблицу', 'setupSheet')
+      .addToUi();
+  } catch (error) {
+    Logger.log('onOpen не может быть вызван в этом контексте');
+  }
 }
 ```
 
-4. Замените `YOUR_SPREADSHEET_ID_HERE` на реальный ID из шага 2
+4. **Замените** `YOUR_SPREADSHEET_ID_HERE` на реальный ID из шага 2
 5. Нажмите **Сохранить** (иконка дискеты)
 
 ## Шаг 4: Развертывание веб-приложения
