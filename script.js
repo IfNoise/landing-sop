@@ -76,15 +76,22 @@ if (contactForm) {
             // Send data to Google Apps Script
             const response = await fetch(GOOGLE_SCRIPT_URL, {
                 method: 'POST',
-                 mode: 'no-cors',
                 headers: {
-                    
                     'Content-Type': 'application/json',
                 },
                 body: JSON.stringify(data)
             });
             
-            // Проверяем реальный ответ
+            console.log('Response status:', response.status);
+            
+            // Проверяем статус ответа
+            if (!response.ok) {
+                const errorText = await response.text();
+                console.error('Server error:', errorText);
+                throw new Error(`Server error: ${response.status}`);
+            }
+            
+            // Пробуем распарсить JSON
             const result = await response.json();
             console.log('Ответ сервера:', result);
             
