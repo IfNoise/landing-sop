@@ -76,7 +76,9 @@ if (contactForm) {
             // Send data to Google Apps Script
             const response = await fetch(GOOGLE_SCRIPT_URL, {
                 method: 'POST',
+                 mode: 'no-cors',
                 headers: {
+                    
                     'Content-Type': 'application/json',
                 },
                 body: JSON.stringify(data)
