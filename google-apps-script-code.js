@@ -6,8 +6,26 @@
 // ⚠️ ВАЖНО: Замените на ID вашей таблицы
 const SPREADSHEET_ID = 'YOUR_SPREADSHEET_ID_HERE';
 
+// ⚠️ ВАЖНО: Укажите email для получения уведомлений
+const NOTIFICATION_EMAIL = 'noise8301@gmail.com';
+
 // Максимальная длина текстовых полей
 const MAX_LENGTH = 1000;
+
+// ============================================
+// CORS SUPPORT
+// ============================================
+
+function doOptions(e) {
+  return ContentService
+    .createTextOutput('')
+    .setMimeType(ContentService.MimeType.TEXT)
+    .setHeaders({
+      'Access-Control-Allow-Origin': '*',
+      'Access-Control-Allow-Methods': 'GET, POST, OPTIONS',
+      'Access-Control-Allow-Headers': 'Content-Type'
+    });
+}
 
 // ============================================
 // ОБРАБОТКА POST ЗАПРОСОВ (форма отправки)
@@ -99,13 +117,23 @@ function doGet(e) {
 function createSuccessResponse() {
   return ContentService
     .createTextOutput(JSON.stringify({ success: true }))
-    .setMimeType(ContentService.MimeType.JSON);
+    .setMimeType(ContentService.MimeType.JSON)
+    .setHeaders({
+      'Access-Control-Allow-Origin': '*',
+      'Access-Control-Allow-Methods': 'GET, POST, OPTIONS',
+      'Access-Control-Allow-Headers': 'Content-Type'
+    });
 }
 
 function createErrorResponse(message) {
   return ContentService
     .createTextOutput(JSON.stringify({ success: false, error: message }))
-    .setMimeType(ContentService.MimeType.JSON);
+    .setMimeType(ContentService.MimeType.JSON)
+    .setHeaders({
+      'Access-Control-Allow-Origin': '*',
+      'Access-Control-Allow-Methods': 'GET, POST, OPTIONS',
+      'Access-Control-Allow-Headers': 'Content-Type'
+    });
 }
 
 // ============================================
@@ -114,7 +142,10 @@ function createErrorResponse(message) {
 
 function sendEmailNotification(data) {
   try {
-    const myEmail = Session.getActiveUser().getEmail();
+    // Используем указанный email из константы
+    if (!NOTIFICATION_EMAIL || NOTIFICATION_EMAIL === 'noise8301@gmail.com') {
+      Logger.log('⚠️ ВНИМАНИЕ: Укажите ваш email в константе NOTIFICATION_EMAIL');
+    }
     
     // Ограничение: не более 1 письма в 5 минут (защита от спама)
     const cache = CacheService.getScriptCache();
@@ -124,7 +155,7 @@ function sendEmailNotification(data) {
     if (!lastEmailTime || (now - parseInt(lastEmailTime)) > 300000) { // 5 минут = 300000 мс
       
       MailApp.sendEmail({
-        to: myEmail,
+        to: NOTIFICATION_EMAIL,
         subject: '🌾 Новая заявка с Landing SOP',
         htmlBody: `
           <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
@@ -174,7 +205,7 @@ function sendEmailNotification(data) {
       });
       
       cache.put('last_email_time', now.toString(), 600);
-      Logger.log('Email notification sent to ' + myEmail);
+      Logger.log('Email notification sent to ' + NOTIFICATION_EMAIL);
       
     } else {
       Logger.log('Email notification skipped (rate limited)');

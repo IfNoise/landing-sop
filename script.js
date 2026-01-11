@@ -61,10 +61,7 @@ if (contactForm) {
             message: formData.get('message') || '',
             website: formData.get('website') || '' // Honeypot field
         };
-        
-        // Логирование для отладки (удалите после тестирования)
-        console.log('Отправляемые данные:', data);
-        
+
         // Hide any previous messages
         if (formSuccess) formSuccess.style.display = 'none';
         if (formError) formError.style.display = 'none';
@@ -76,36 +73,30 @@ if (contactForm) {
         submitBtn.textContent = 'Отправка...';
         
         try {
-            // ВАЖНО: Показываем данные перед отправкой для отладки
-            alert('Проверка данных перед отправкой:\n\n' + 
-                  'Имя: ' + data.name + '\n' +
-                  'Ферма: ' + data.farm + '\n' +
-                  'Email: ' + data.email + '\n' +
-                  'Телефон: ' + data.phone + '\n' +
-                  'Тип: ' + data['farm-type'] + '\n' +
-                  'Размер: ' + data['farm-size'] + '\n' +
-                  'Сообщение: ' + data.message);
-            
             // Send data to Google Apps Script
             const response = await fetch(GOOGLE_SCRIPT_URL, {
                 method: 'POST',
-                mode: 'no-cors', // Important for Google Apps Script
                 headers: {
                     'Content-Type': 'application/json',
                 },
                 body: JSON.stringify(data)
             });
             
-            // Note: with 'no-cors' mode, we can't read the response
-            // but if no error is thrown, we assume success
+            // Проверяем реальный ответ
+            const result = await response.json();
+            console.log('Ответ сервера:', result);
             
-            // Show success message
-            if (formSuccess) {
-                formSuccess.style.display = 'block';
-                contactForm.reset();
-                
-                // Scroll to success message
-                formSuccess.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+            if (result.success) {
+                // Show success message
+                if (formSuccess) {
+                    formSuccess.style.display = 'block';
+                    contactForm.reset();
+                    
+                    // Scroll to success message
+                    formSuccess.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+                }
+            } else {
+                throw new Error(result.error || 'Ошибка отправки формы');
             }
             
         } catch (error) {
