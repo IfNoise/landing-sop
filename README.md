@@ -1,49 +1,45 @@
-# Farm SOP Landing Page
+# Cannabis Farm SOP Landing Page
 
-Professional B2B landing page for SOP (Standard Operating Procedures) implementation services for farms in Thailand.
+Professional B2B landing page for SOP (Standard Operating Procedures) implementation services for cannabis farms in Thailand, focusing on protected cultivation (greenhouse/indoor).
 
-## Overview
+## 🌿 Overview
 
-This landing page targets farm owners and managers who want to improve their operations through gradual SOP implementation without requiring full GACP certification.
+Landing page for cannabis farm operators seeking to improve operations through systematic SOP implementation. Specialized for protected cultivation environments (greenhouses, indoor facilities).
 
-## Features
+## ✨ Features
 
-- **Clean, professional design** - Calm, trustworthy aesthetic without aggressive marketing
-- **Multi-language support** - Built-in Google Translate for EN, TH, CN, VN
-- **Mobile responsive** - Fully optimized for all devices
-- **Contact form** - Lead generation with comprehensive farm details
-- **Clear value proposition** - Focuses on practical benefits and step-by-step approach
+- **Cannabis-focused** - Cultivation scale in m² and plant count
+- **Multi-language** - Google Translate (EN, TH, CN, VI, RU)
+- **Mobile responsive** - Optimized for all devices
+- **Google Sheets integration** - Direct form submissions to spreadsheet
+- **Email notifications** - Automatic alerts for new leads
+- **Security** - Honeypot anti-bot, data validation, sanitization
 
-## Sections
+## 📋 Sections
 
-1. **Hero** - Main value proposition and CTA
-2. **Benefits** - Why implement SOPs (6 key benefits)
-3. **Our Approach** - 6-step process explanation
-4. **Common SOPs** - Categorized list of typical procedures
-5. **Contact Form** - Lead capture with farm-specific fields
-6. **Footer** - Navigation and contact information
+1. **Hero** - Value proposition for cannabis operations
+2. **Benefits** - 6 key advantages of SOP implementation
+3. **Approach** - 6-step implementation process
+4. **Common SOPs** - Categorized procedures (Cultivation, Processing, Quality, etc.)
+5. **Contact Form** - Lead capture with cannabis-specific fields:
+   - Growing Environment (Greenhouse/Indoor/Outdoor/Hybrid)
+   - Cultivation Scale (m² and plant count)
+6. **Footer** - Navigation and contact info
 
-## Tech Stack
+## 🛠 Tech Stack
 
-- Pure HTML5, CSS3, JavaScript (no frameworks)
-- Google Translate API for multi-language
-- Responsive grid layouts
-- CSS custom properties for theming
+- **Frontend**: Pure HTML5, CSS3, Vanilla JavaScript
+- **Backend**: Google Apps Script + Google Sheets
+- **Deployment**: GitHub Pages (automatic via GitHub Actions)
+- **Translation**: Google Translate Widget
+- **Form**: Direct integration with Google Sheets API
 
-## Target Audience
+## 🎯 Target Audience
 
-- Farm owners and managers in Thailand
-- Agricultural businesses seeking quality improvement
-- Operations looking to scale systematically
-- Farms considering future certification
-
-## Tone & Messaging
-
-- Professional but approachable
-- Practical, not theoretical
-- No empty promises or hype
-- Focus on gradual implementation
-- Emphasis on real-world adaptation
+- Cannabis farm owners/managers in Thailand
+- Protected cultivation operations (greenhouse/indoor)
+- Facilities ranging from 100m² to 5,000m²+
+- Operations with 200 to 15,000+ plants
 
 ## Setup
 
@@ -51,63 +47,141 @@ This landing page targets farm owners and managers who want to improve their ope
 
 1. Open `index.html` in a browser
 2. No build process required
-3. All assets are self-contained
+## 🚀 Quick Start
 
-### GitHub Pages Deployment
+### 1. Local Development
+```bash
+# Clone repository
+git clone https://github.com/IfNoise/landing-sop.git
+cd landing-sop
 
-This project is configured for automatic deployment to GitHub Pages:
+# Open in browser
+open index.html
+```
 
-1. **Enable GitHub Pages:**
-   - Go to repository Settings → Pages
-   - Source: "GitHub Actions"
-   
-2. **Automatic Deployment:**
-   - Every push to `main` branch triggers automatic deployment
-   - GitHub Actions workflow: `.github/workflows/deploy.yml`
+### 2. Google Sheets Integration
 
-3. **Manual Deployment:**
-   - Go to Actions tab
-   - Run "Deploy to GitHub Pages" workflow manually
+**Create Google Apps Script:**
+1. Create new Google Sheet
+2. Extensions → Apps Script
+3. Copy this simplified code:
 
-4. **Access your site:**
-   - URL: `https://ifnoise.github.io/landing-sop/`
-   - Custom domain: Add `CNAME` file with your domain
+```javascript
+const SPREADSHEET_ID = 'YOUR_SPREADSHEET_ID';
+const NOTIFICATION_EMAIL = 'your@email.com';
 
-**Note:** `.nojekyll` file disables Jekyll processing for faster deployments.
+function doPost(e) {
+  try {
+    const data = JSON.parse(e.postData.contents);
+    
+    // Validate
+    if (!data.name || !data.email || !data.message) {
+      return createResponse(false, 'Missing fields');
+    }
+    
+    // Honeypot
+    if (data.website) {
+      return createResponse(false, 'Bot detected');
+    }
+    
+    // Save to sheet
+    const sheet = SpreadsheetApp.openById(SPREADSHEET_ID).getSheetByName('Заявки');
+    sheet.appendRow([
+      new Date(data.timestamp),
+      data.name || '',
+      data.farm || '',
+      data.email || '',
+      data.phone || '',
+      data['farm-type'] || '',
+      data['farm-size'] || '',
+      data.message || ''
+    ]);
+    
+    // Send email
+    if (NOTIFICATION_EMAIL) {
+      MailApp.sendEmail(NOTIFICATION_EMAIL, '🌾 Новая заявка', JSON.stringify(data, null, 2));
+    }
+    
+    return createResponse(true, 'Success');
+  } catch (error) {
+    return createResponse(false, error.toString());
+  }
+}
 
-## Customization
+function createResponse(success, message) {
+  return ContentService
+    .createTextOutput(JSON.stringify({ success, message }))
+    .setMimeType(ContentService.MimeType.JSON);
+}
+```
 
-- Colors: Edit CSS variables in `styles.css`
-- Content: All text is in `index.html`
-- Form handling: Configure in `script.js`
+4. Deploy → New deployment → Web app:
+   - Execute as: **Me**
+   - Who has access: **Anyone**
+5. Copy web app URL
+6. Update `GOOGLE_SCRIPT_URL` in `script.js`
 
-## Browser Support
+**Setup Sheet:**
+Create sheet named "Заявки" with headers:
+```
+Дата и время | Имя | Название фермы | Email | Телефон | Тип фермы | Размер фермы | Сообщение
+```
+
+### 3. Deploy to GitHub Pages
+
+Already configured! Just:
+1. Push to `main` branch
+2. GitHub Actions auto-deploys
+3. Live at: https://ifnoise.github.io/landing-sop/
+
+## 📁 File Structure
+
+```
+/landing-sop
+├── index.html                    # Main page
+├── styles.css                    # Styles with cannabis focus
+├── styles-features.css           # Additional feature styles
+├── script.js                     # Form handling (no-cors mode)
+├── .github/workflows/deploy.yml  # Auto-deployment
+├── .nojekyll                     # Skip Jekyll processing
+├── PROMPT.md                     # Original requirements
+└── README.md                     # This file
+```
+
+## 🔧 Configuration
+
+**Form Fields:**
+- Name (required)
+- Farm Name (optional)
+- Email (required, validated)
+- Phone (optional)
+- Growing Environment: Greenhouse/Indoor/Outdoor/Hybrid
+- Cultivation Scale: Micro/Small/Medium/Large/Commercial (in m² and plants)
+- Message (required)
+- Website (honeypot, hidden)
+
+**Security:**
+- Honeypot field for bot protection
+- Email regex validation
+- Data sanitization in Apps Script
+- Max text length: 1000 chars
+
+## 🌐 Browser Support
 
 - Chrome/Edge (latest)
 - Firefox (latest)
 - Safari (latest)
 - Mobile browsers (iOS/Android)
 
-## File Structure
+## 📝 Customization
 
-```
-/landing
-├── index.html          # Main landing page
-├── styles.css          # Styling
-├── script.js           # Interactions & form handling
-├── README.md           # This file
-└── PROMPT.md           # Original project requirements
-```
-
-## Notes
-
-- This is a static landing page
-- Form submissions currently log to console
-- Integrate with your backend/CRM for production use
-- Old files preserved as *_old.* for reference
+- **Colors**: Edit CSS variables in `styles.css` (green cannabis theme)
+- **Content**: All text in `index.html`
+- **Form logic**: `script.js` with no-cors mode for Google Apps Script
 
 ---
 
-**Target Markets:** Thailand, Southeast Asia  
-**Languages:** English (primary), Thai, Chinese, Vietnamese (via Google Translate)  
-**Last Updated:** January 2025
+**Live Site:** https://ifnoise.github.io/landing-sop/  
+**Target Market:** Thailand cannabis cultivation  
+**Languages:** EN, TH, CN, VI, RU (Google Translate)  
+**Last Updated:** January 2026
