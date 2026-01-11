@@ -74,38 +74,27 @@ if (contactForm) {
         
         try {
             // Send data to Google Apps Script
+            // ВРЕМЕННО используем no-cors пока не исправлены CORS headers в Apps Script
             const response = await fetch(GOOGLE_SCRIPT_URL, {
                 method: 'POST',
+                mode: 'no-cors', // Необходимо пока CORS не настроен
                 headers: {
                     'Content-Type': 'application/json',
                 },
                 body: JSON.stringify(data)
             });
             
-            console.log('Response status:', response.status);
+            // С no-cors mode мы не можем прочитать ответ,
+            // но если нет ошибки - считаем что данные отправлены
+            console.log('Форма отправлена (no-cors mode)');
             
-            // Проверяем статус ответа
-            if (!response.ok) {
-                const errorText = await response.text();
-                console.error('Server error:', errorText);
-                throw new Error(`Server error: ${response.status}`);
-            }
-            
-            // Пробуем распарсить JSON
-            const result = await response.json();
-            console.log('Ответ сервера:', result);
-            
-            if (result.success) {
-                // Show success message
-                if (formSuccess) {
-                    formSuccess.style.display = 'block';
-                    contactForm.reset();
-                    
-                    // Scroll to success message
-                    formSuccess.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
-                }
-            } else {
-                throw new Error(result.error || 'Ошибка отправки формы');
+            // Show success message
+            if (formSuccess) {
+                formSuccess.style.display = 'block';
+                contactForm.reset();
+                
+                // Scroll to success message
+                formSuccess.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
             }
             
         } catch (error) {
